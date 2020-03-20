@@ -20,10 +20,10 @@
 
 # Demo
 
-Solarized dark                                                                               |  Solarized Ocean
+<!--Solarized dark                                                                               |  Solarized Ocean
 :-------------------------------------------------------------------------------------------:|:-------------------------:
-![example image with overlaid bbox](docs/assets/0000295_02000_d_0000031.jpg.annotated..jpg)  |  ![example image with overlaid bbox](docs/assets/0000364_01373_d_0000780.jpg.annotated..jpg)
-
+![example image with overlaid bbox](docs/assets/0000295_02000_d_0000031.jpg.annotated..jpg)  |  ![example image with overlaid bbox](docs/assets/0000364_01373_d_0000780.jpg.annotated..jpg)-->
+![example image with overlaid bbox](docs/assets/0000295_02000_d_0000031.jpg.annotated..jpg) ![example image with overlaid bbox](docs/assets/0000364_01373_d_0000780.jpg.annotated..jpg)
 <!--![example image with overlaid bbox](docs/assets/0000295_02000_d_0000031.jpg.annotated..jpg)-->
 
 ### Setup
@@ -77,7 +77,7 @@ Comparison of AP (%), False Positives (FP), and Recall (%) with state-of-the-art
 ![UAVDT Results](docs/assets/uavdt_results.png)
 
 Comparison of AP (average precision), AR (average recall), True Posi-tives (TP), and False Positives (FP) with state-of-the-art methods on VisDronedataset
-![VisDrone Results](docs/assets/uavdt_results.png)
+![VisDrone Results](docs/assets/visdrone_results.png)
 
 
 # Visualization
