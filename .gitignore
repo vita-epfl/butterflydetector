@@ -1,0 +1,40 @@
+# compat
+outputs
+# system
+.DS_Store
+.gitattributes
+.vscode
+
+# Python
+build/
+venv*/
+*.egg-info
+.eggs/
+__pycache__
+dist/
+.pytest_cache/
+.ipynb_checkpoints/
+butterflydetector/functional.cpython-*
+butterflydetector/functional.html
+
+# data
+data*/
+*debug.png
+*.pl
+*.pl-*
+*.pl.*
+*.pkl
+*.pkl-*
+*.pkl.*
+*.json
+*.log
+*.zip
+outputs/
+shared/
+decoder.prof
+decoder_flame.svg
+*.onnx
+debug.*.png
+pretrained
+test-clis-*/
+pretrained
