@@ -1,7 +1,7 @@
 MODEL:
   INIT_WEIGHTS: true
   NAME: hrnet
-  PRETRAINED: 'pretrained_v100/imagenet/hrnet_w32-36af842e.pth'
+  PRETRAINED: 'pretrained/imagenet/hrnet_w32-36af842e.pth'
   EXTRA:
     PRETRAINED_LAYERS:
     - 'conv1'

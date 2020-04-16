@@ -233,7 +233,7 @@ def determine_nscales(head_name):
     return 0
 
 def factory(name, n_features):
-    if name in re.match('(?:ns|o)?butterfly([0-9]+)$', name) or \
+    if re.match('(?:ns|o)?butterfly([0-9]+)$', name) or \
        re.match('(?:ns|o)?repulse([0-9]+)$', name):
 
         n_fields = determine_nfields(name)

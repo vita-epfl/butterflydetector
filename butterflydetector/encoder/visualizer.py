@@ -2,7 +2,7 @@ import logging
 import numpy as np
 import re
 
-from ..data import COCO_KEYPOINTS, COCO_PERSON_SKELETON, DENSER_COCO_PERSON_CONNECTIONS, BBOX_POINTS, BBOX_PERSON_SKELETON_COMPLETE
+from ..data import BBOX_POINTS, BBOX_SKELETON_COMPLETE
 from .. import show
 
 LOG = logging.getLogger(__name__)
@@ -20,8 +20,6 @@ class Visualizer(object):
         self.show = show_plots
         self.keypoint_painter = show.KeypointPainter(show_box=True)
 
-        self.keypoints_list = COCO_KEYPOINTS
-        self.keypoints_skeleton_list = COCO_PERSON_SKELETON
     def single(self, image, targets, meta):
         keypoint_sets = None
         if 'skeleton' in self.head_names:

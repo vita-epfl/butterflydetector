@@ -178,7 +178,6 @@ def main():
         # unfreeze
         for p in frozen_params:
             p.requires_grad = True
-
     trainer = Trainer(
         net, loss, optimizer, args.output,
         lr_scheduler=lr_scheduler,

@@ -39,7 +39,7 @@ def configure(args):
     stdout_handler = logging.StreamHandler(sys.stdout)
     logging.basicConfig(handlers=[stdout_handler, file_handler])
     log_level = logging.INFO if not args.debug else logging.DEBUG
-    logging.getLogger('openpifpaf').setLevel(log_level)
+    logging.getLogger('butterflydetector').setLevel(log_level)
     LOG.info({
         'type': 'process',
         'argv': sys.argv,

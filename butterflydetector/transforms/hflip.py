@@ -5,34 +5,14 @@ import numpy as np
 import PIL
 
 from .preprocess import Preprocess
-from ..data import COCO_KEYPOINTS, HFLIP, BBOX_POINTS, HFLIP_BBOX
+from ..data import BBOX_POINTS, HFLIP_BBOX
 
 LOG = logging.getLogger(__name__)
-
-
-class HorizontalSwap():
-    def __init__(self, joints=None, hflip=None):
-        self.joints = joints or COCO_KEYPOINTS
-        self.hflip = hflip or HFLIP
-
-    def __call__(self, keypoints):
-        target = np.zeros(keypoints.shape)
-
-        for source_i, xyv in enumerate(keypoints):
-            source_name = self.joints[source_i]
-            target_name = self.hflip.get(source_name)
-            if target_name:
-                target_i = self.joints.index(target_name)
-            else:
-                target_i = source_i
-            target[target_i] = xyv
-
-        return target
 
 class HorizontalSwapButterfly():
     def __init__(self, joints=None, hflip=None):
         self.joints = joints or BBOX_POINTS
-        self.hflip = hflip or HFLIP_BBO
+        self.hflip = hflip or HFLIP_BBOX
 
     def __call__(self, keypoints):
         target = np.zeros(keypoints.shape)
@@ -51,7 +31,7 @@ class HorizontalSwapButterfly():
 
 class HFlip(Preprocess):
     def __init__(self, *, swap=None):
-        self.swap = swap or HorizontalSwap()
+        self.swap = swap or HorizontalSwapButterfly()
 
     def __call__(self, image, anns, meta):
         meta = copy.deepcopy(meta)

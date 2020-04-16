@@ -11,7 +11,7 @@ import argparse
 
 import torch
 
-import openpifpaf
+import butterflydetector
 
 try:
     import thop
@@ -21,7 +21,7 @@ except ImportError:
 
 def count(checkpoint):
     dummy_input = torch.randn(1, 3, 641, 641)
-    model, _ = openpifpaf.network.nets.factory(checkpoint=checkpoint)
+    model, _ = butterflydetector.network.nets.factory(checkpoint=checkpoint)
     return thop.profile(model, inputs=(dummy_input, ))
 
 

@@ -73,7 +73,7 @@ def run_eval_coco(output_folder, backbone, eval_args, output_name=None):
 
     LOG.debug('Launching eval for %s.', output_name)
     subprocess.run([
-        'python', '-m', 'openpifpaf.eval_coco',
+        'python', '-m', 'butterflydetector.eval',
         '--output', out_file,
         '--checkpoint', backbone,
     ] + eval_args, check=True)

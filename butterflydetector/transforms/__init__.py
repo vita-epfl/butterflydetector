@@ -14,7 +14,7 @@ import torchvision
 from .annotations import AnnotationJitter, NormalizeAnnotations
 from .compose import Compose
 from .crop import Crop
-from .hflip import HFlip, HorizontalSwap, HorizontalSwapCBBox
+from .hflip import HFlip, HorizontalSwapButterfly
 from .image import Blur, ImageTransform, JpegCompression
 from .multi_scale import MultiScale
 from .pad import CenterPad, SquarePad, CenterPadTight, CenterPadTightConditional

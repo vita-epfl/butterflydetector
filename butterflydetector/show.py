@@ -197,7 +197,7 @@ class InstancePainter(object):
         for i, ann in enumerate(annotations):
             if colors is not None:
                 color = colors[i]
-            if scores in not None:
+            if scores is not None:
                 score = scores[i]
 
             text = texts[i] if texts is not None else None
@@ -210,7 +210,7 @@ class InstancePainter(object):
         kps = ann.data[:, :3]
         v = kps[:, 2]
         if not np.any(v > 0):
-            continue
+            return
         mask = v > 0
         bbox = np.array([ann.data[:, 0]-ann.data[:, 3]/2, ann.data[:, 1]-ann.data[:, 4]/2, ann.data[:, 3], ann.data[:, 4]])
         assert kps.shape[1] == 3
@@ -229,7 +229,7 @@ class InstancePainter(object):
             y1 -= 2.0
             h += 2.0
 
-        self._draw_box(ax, x1, y1, x1+w, y1+h v, color, ann.score())
+        self._draw_box(ax, x1, y1, x1+w, y1+h, v, color, ann.score())
 
         if text is not None:
             self._draw_text(ax, x, y, v, text, color)

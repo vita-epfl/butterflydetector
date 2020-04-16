@@ -3,7 +3,6 @@ import torch
 import torchvision
 
 from . import basenetworks, heads
-from ..data import COCO_KEYPOINTS, COCO_PERSON_SKELETON, DENSER_COCO_PERSON_CONNECTIONS, HFLIP
 
 # generate hash values with: shasum -a 256 filename.pkl
 
@@ -137,9 +136,6 @@ def factory_from_args(args):
         pretrained=args.pretrained,
         experimental=getattr(args, 'experimental_decoder', False),
         cross_talk=args.cross_talk,
-        two_scale=args.two_scale,
-        multi_scale=args.multi_scale,
-        multi_scale_hflip=args.multi_scale_hflip,
     )
 
 
@@ -210,8 +206,7 @@ def factory(
         head_names=('butterfly'),
         pretrained=True,
         experimental=False,
-        cross_talk=0.0,
-        multi_scale_hflip=True):
+        cross_talk=0.0):
 
     if not checkpoint and base_name:
         net_cpu = factory_from_scratch(base_name, head_names, pretrained=pretrained)
@@ -387,13 +382,6 @@ def cli(parser):
                        help='head networks')
     group.add_argument('--no-pretrain', dest='pretrained', default=True, action='store_false',
                        help='create model without ImageNet pretraining')
-    group.add_argument('--two-scale', default=False, action='store_true',
-                       help='[experimental]')
-    group.add_argument('--multi-scale', default=False, action='store_true',
-                       help='[experimental]')
-    group.add_argument('--no-multi-scale-hflip',
-                       dest='multi_scale_hflip', default=True, action='store_false',
-                       help='[experimental]')
     group.add_argument('--cross-talk', default=0.0, type=float,
                        help='[experimental]')
 

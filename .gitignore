@@ -38,3 +38,4 @@ debug.*.png
 pretrained
 test-clis-*/
 pretrained
+data

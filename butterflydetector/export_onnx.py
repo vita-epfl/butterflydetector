@@ -12,7 +12,7 @@ import shutil
 
 import torch
 
-import openpifpaf
+import butterflydetector
 
 try:
     import onnx
@@ -30,14 +30,14 @@ except ImportError:
 class MonkeyPatches:
     def __init__(self):
         self.original_compositehead_patched_forward = \
-            openpifpaf.network.heads.CompositeField.forward
+            butterflydetector.network.heads.CompositeField.forward
 
     def apply(self):
-        openpifpaf.network.heads.CompositeField.forward = \
+        butterflydetector.network.heads.CompositeField.forward = \
             self.compositehead_patched_forward
 
     def revert(self):
-        openpifpaf.network.heads.CompositeField.forward = \
+        butterflydetector.network.heads.CompositeField.forward = \
             self.original_compositehead_patched_forward
 
     @staticmethod
@@ -101,7 +101,7 @@ def apply(checkpoint, outfile, verbose=True):
 
     # dummy_input = torch.randn(1, 3, 193, 257)
     dummy_input = torch.randn(1, 3, 97, 129)
-    model, _ = openpifpaf.network.nets.factory(checkpoint=checkpoint)
+    model, _ = butterflydetector.network.nets.factory(checkpoint=checkpoint)
     # model = torch.nn.Sequential(model, GetPifC())
 
     # Providing input and output names sets the display names for values
@@ -192,7 +192,7 @@ def simplify(infile, outfile=None):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--checkpoint', default='resnet50')
-    parser.add_argument('--outfile', default='openpifpaf-resnet50.onnx')
+    parser.add_argument('--outfile', default='butterflydetector-resnet50.onnx')
     parser.add_argument('--simplify', dest='simplify', default=False, action='store_true')
     parser.add_argument('--no-polish', dest='polish', default=True, action='store_false',
                         help='runs checker, optimizer and shape inference')

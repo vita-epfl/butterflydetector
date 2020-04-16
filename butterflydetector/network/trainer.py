@@ -171,7 +171,6 @@ class Trainer(object):
             batch_start = time.time()
             apply_gradients = batch_idx % self.stride_apply == 0
             loss, head_losses = self.train_batch(data, target, meta, apply_gradients)
-
             # update epoch accumulates
             if loss is not None:
                 epoch_loss += loss

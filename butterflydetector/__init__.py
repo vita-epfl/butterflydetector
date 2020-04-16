@@ -1,8 +1,8 @@
-"""An open implementation of PifPaf."""
+"""An open implementation of Butterfly Detector."""
 
-__version__ = '0.10.1'
+__version__ = '0.0.1'
 
-from . import datasets
+from . import data_manager
 from . import decoder
 from . import network
 from . import optimize
