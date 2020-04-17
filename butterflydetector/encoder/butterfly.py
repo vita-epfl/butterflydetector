@@ -110,6 +110,9 @@ class ButterflyGenerator(object):
             self.fill_coordinate(f, xyv, width, height, scale)
 
     def fill_coordinate(self, f, xyv, width, height, scale):
+        '''
+        Use a normal 4x4 field
+        '''
         #import pdb; pdb.set_trace()
         ij = np.round(xyv[:2] - self.s_offset).astype(np.int) + self.padding
         minx, miny = int(ij[0]), int(ij[1])
@@ -120,22 +123,6 @@ class ButterflyGenerator(object):
         offset = xyv[:2] - (ij + self.s_offset - self.padding)
         offset = offset.reshape(2, 1, 1)
 
-        # if width>16 or height>16:
-        #     w = np.round(0.5*width + 0.5).astype(np.int)
-        #     h = np.round(0.5*height + 0.5).astype(np.int)
-        #     xy_offset = [(w - 1.0) / 2.0, (h - 1.0) / 2.0]
-        #     ij_ignore = np.round(xyv[:2] - xy_offset).astype(np.int) + self.padding
-        #
-        #     if width>16:
-        #         minx_ignore = int(ij_ignore[0])
-        #     else:
-        #         minx_ignore = minx
-        #     if height>16:
-        #         miny_ignore = int(ij_ignore[1])
-        #     else:
-        #         miny_ignore = miny
-        #     maxx_ignore, maxy_ignore = minx_ignore + w, miny_ignore + h
-        #     self.intensities[f, miny_ignore:maxy_ignore, minx_ignore:maxx_ignore] = np.nan
         # update intensity
         self.intensities[f, miny:maxy, minx:maxx] = 1.0
         # update regression
@@ -146,81 +133,23 @@ class ButterflyGenerator(object):
             sink_reg[:, mask]
         self.fields_reg_l[f, miny:maxy, minx:maxx][mask] = sink_l[mask]
 
-        # update scale
-        self.fields_width[f, miny:maxy, minx:maxx][mask] = np.log(width)
-        self.fields_height[f, miny:maxy, minx:maxx][mask] = np.log(height)
-
-        # update scale
-        #self.fields_scale[f, miny:maxy, minx:maxx][mask] = scale
-
-    def fill_coordinate_kps(self, f, kps, width, height, scale):
-        xy_offset = [-0.5, -0.5]
-        #xy_offset = [0, 0]
-        minx, miny = np.min(kps[kps[:,2]>0, 0]), np.min(kps[kps[:,2]>0, 1])
-        maxx, maxy = np.max(kps[kps[:,2]>0, 0]), np.max(kps[kps[:,2]>0, 1])
-        #w = np.round(w - xy_offset[0]).astype(np.int)
-        #h = np.round(h - xy_offset[1]).astype(np.int)
-        minx, miny = np.round(np.array([minx, miny]) + xy_offset).astype(np.int) + self.padding
-        maxx, maxy = np.round(np.array([maxx, maxy]) - xy_offset).astype(np.int) + self.padding
-        w = maxx - minx
-        h = maxy - miny
-        if w == 0:
-            w = 2
-        if h == 0:
-            h = 2
-        if w>4:
-            w -= w%2
-        else:
-            w += w%2
-        if h>4:
-            h -= h%2
-        else:
-            h += h%2
-
-
-        xyv = kps[-1]
-        ij = np.round(xyv[:2] - xy_offset).astype(np.int) + self.padding
-        minx, miny = ij - np.array([w//2, h//2])
-        maxx, maxy = ij + np.array([w//2, h//2])
-        sink = create_sink_2d(w, h)
-        if minx < 0 or maxx > self.intensities.shape[2] or \
-           miny < 0 or maxy > self.intensities.shape[1]:
-            return
-        # if ij[0] < minx:
-        #     ij[0] -=1
-        # if ij[1] < miny:
-        #     ij[1] -=1
-        offset = xyv[:2] - (ij + xy_offset - self.padding)
-        offset = offset.reshape(2, 1, 1)
-
-        # update intensity
-        self.intensities[f, miny:maxy, minx:maxx] = 1.0
-        # update regression
-        sink_reg = sink + offset
-        sink_l = np.linalg.norm(sink_reg, axis=0)
-        mask = sink_l < self.fields_reg_l[f, miny:maxy, minx:maxx]
-        self.fields_reg[f, :, miny:maxy, minx:maxx][:, mask] = \
-            sink_reg[:, mask]
-        self.fields_reg_l[f, miny:maxy, minx:maxx][mask] = sink_l[mask]
-
-        # update scale
+        # update width and height
         self.fields_width[f, miny:maxy, minx:maxx][mask] = np.log(width)
         self.fields_height[f, miny:maxy, minx:maxx][mask] = np.log(height)
 
     def fill_coordinate_kps2(self, f, kps, width, height, scale):
+        '''
+        Use a wxh field pointing towards the center
+        '''
         xy_offset = [-0.5, -0.5]
         #xy_offset = [0, 0]
         minx, miny = np.min(kps[kps[:,2]>0, 0]), np.min(kps[kps[:,2]>0, 1])
         maxx, maxy = np.max(kps[kps[:,2]>0, 0]), np.max(kps[kps[:,2]>0, 1])
-        #w = np.round(w - xy_offset[0]).astype(np.int)
-        #h = np.round(h - xy_offset[1]).astype(np.int)
         w = np.round(maxx - minx + 0.5).astype(np.int)
 
         h = np.round(maxy- miny + 0.5).astype(np.int)
 
         xyv = kps[-1]
-        #xyv = np.array([minx, miny, 2.0], dtype=float32)
-        #import pdb; pdb.set_trace()
         xy_offset = [(w - 1.0) / 2.0, (h - 1.0) / 2.0]
 
         ij = np.round(xyv[:2] - xy_offset).astype(np.int) + self.padding
@@ -228,24 +157,8 @@ class ButterflyGenerator(object):
         minx, miny = int(ij[0]), int(ij[1])
 
         if not self.obutterfly:
-            # if w<4 and w>0:
-            #     diff = 4 - w
-            #     pad = np.ceil(diff/2).astype(np.int)
-            #     w += (2*pad)
-            #     minx -= pad
-            #     #     # elif w>0:
-            #     #     #     w += 2
-            #     #     #     minx -= 1
             if w<=0:
                 raise Exception('w= ', w, ' is negative or zero')
-            # if h<4 and h>0:
-            #     diff = 4 - h
-            #     pad = np.ceil(diff/2).astype(np.int)
-            #     h += (2*pad)
-            #     miny -= pad
-            #     #     # elif h>0:
-            #     #     #     h += 2
-            #     #     #     miny -= 1
             if h<=0:
                 raise Exception('h= ', h, ' is negative or zero')
         else:
@@ -306,11 +219,6 @@ class ButterflyGenerator(object):
         maxx = maxx_n
         miny = miny_n
         maxy = maxy_n
-        # if ij[0] < minx:
-        #     ij[0] -=1
-        # if ij[1] < miny:
-        #     ij[1] -=1
-        #offset = xyv[:2] - (ij + xy_offset - self.padding)
         offset = offset.reshape(2, 1, 1)
 
         # update intensity
@@ -328,16 +236,9 @@ class ButterflyGenerator(object):
         self.fields_height[f, miny:maxy, minx:maxx][mask] = np.log(height)
 
     def fill_coordinate_kpsGradient(self, f, kps, width, height, scale):
-        # def gaussian2D(shape, sigma_x=1, sigma_y=1):
-        #     n, m = [(ss - 1.) / 2. for ss in shape]
-        #     x = np.abs(np.linspace(n, -n, num=shape[0], dtype=np.float32))-0.5*(shape[0]%2)
-        #     y = np.abs(np.linspace(m, -m, num=shape[1], dtype=np.float32))-0.5*(shape[1]%2)
-        #     y, x = np.ogrid[-m:m+1,-n:n+1]
-        #
-        #     h = np.exp(-(((x * x )/(2 * sigma_x * sigma_x)) + ((y * y)/(2 * sigma_y * sigma_y))))
-        #     h[h < np.finfo(h.dtype).eps * h.max()] = 0
-        #     return h
-
+        '''
+        Use a wxh field but with weights obtained using a 2D Gaussian
+        '''
         def gaussian2D(shape, sigma_x=1, sigma_y=1):
             w, h = shape
             if w == 1 and h == 1:
@@ -353,11 +254,8 @@ class ButterflyGenerator(object):
             return re
 
         xy_offset = [-0.5, -0.5]
-        #xy_offset = [0, 0]
         minx, miny = np.min(kps[kps[:,2]>0, 0]), np.min(kps[kps[:,2]>0, 1])
         maxx, maxy = np.max(kps[kps[:,2]>0, 0]), np.max(kps[kps[:,2]>0, 1])
-        #w = np.round(w - xy_offset[0]).astype(np.int)
-        #h = np.round(h - xy_offset[1]).astype(np.int)
         w = np.round(maxx - minx + 0.5).astype(np.int)
         w -= (w)%2
         h = np.round(maxy - miny + 0.5).astype(np.int)
@@ -366,8 +264,7 @@ class ButterflyGenerator(object):
         h = max(2, h)
 
         xyv = kps[-1]
-        #xyv = np.array([minx, miny, 2.0], dtype=float32)
-        #import pdb; pdb.set_trace()
+
         xy_offset = [(w - 1.0) / 2.0, (h - 1.0) / 2.0]
 
         ij = np.round(xyv[:2] - xy_offset).astype(np.int) + self.padding
@@ -376,14 +273,6 @@ class ButterflyGenerator(object):
 
         if w<=0:
             raise Exception('w= ', w, ' is negative or zero')
-        # if h<4 and h>0:
-        #     diff = 4 - h
-        #     pad = np.ceil(diff/2).astype(np.int)
-        #     h += (2*pad)
-        #     miny -= pad
-        #     #     # elif h>0:
-        #     #     #     h += 2
-        #     #     #     miny -= 1
         if h<=0:
             raise Exception('h= ', h, ' is negative or zero')
 
@@ -407,11 +296,7 @@ class ButterflyGenerator(object):
         maxx = maxx_n
         miny = miny_n
         maxy = maxy_n
-        # if ij[0] < minx:
-        #     ij[0] -=1
-        # if ij[1] < miny:
-        #     ij[1] -=1
-        #offset = xyv[:2] - (ij + xy_offset - self.padding)
+
         offset = offset.reshape(2, 1, 1)
 
         # update intensity
@@ -430,6 +315,9 @@ class ButterflyGenerator(object):
         self.fields_height[f, miny:maxy, minx:maxx][mask] = np.log(height)
 
     def fill_coordinate_max4(self, f, kps, width, height, scale):
+        '''
+        Use a 4x4 field with ignore region surrounding it.
+        '''
         xy_offset = [-0.5, -0.5]
         #xy_offset = [0, 0]
         minx, miny = np.min(kps[kps[:,2]>0, 0]), np.min(kps[kps[:,2]>0, 1])
@@ -472,8 +360,6 @@ class ButterflyGenerator(object):
             self.intensities[f, miny_ignore:maxy_ignore, minx_ignore:maxx_ignore] = np.nan
         w = 4
         h = 4
-        #xyv = np.array([minx, miny, 2.0], dtype=float32)
-        #import pdb; pdb.set_trace()
 
         sink = create_sink_2d(w, h)
 
@@ -486,11 +372,6 @@ class ButterflyGenerator(object):
         maxx = maxx_n
         miny = miny_n
         maxy = maxy_n
-        # if ij[0] < minx:
-        #     ij[0] -=1
-        # if ij[1] < miny:
-        #     ij[1] -=1
-        #offset = xyv[:2] - (ij + xy_offset - self.padding)
         offset = offset.reshape(2, 1, 1)
 
         # update intensity
