@@ -17,29 +17,29 @@ from .network import nets
 from . import decoder, encoder, show, transforms, data_manager
 
 from collections import defaultdict
-from nms import non_max_suppression_fast, py_cpu_softnms
+from .nms import non_max_suppression_fast, py_cpu_softnms
 
 import sys
 
+LOG = logging.getLogger(__name__)
+
 class EvalAerial(object):
-    def __init__(self, processor, annotations_inverse, headnames, snms=False, nms=False, snms_threshold=None,visdrone=False, skeleton=None):
+    def __init__(self, processor, annotations_inverse, headnames, args, skeleton=None):
         self.processor = processor
         self.annotations_inverse = annotations_inverse
-        self.visdrone = visdrone
         self.predictions = defaultdict(list)
         self.decoder_time = 0.0
         self.dict_folder = defaultdict(list)
-        self.snms = snms
-        self.nms = nms
-        self.snms_threshold = snms_threshold
+        self.args = args
+        self.image_ids = []
 
     def from_predictions(self, annotations, meta,
-                         debug=False, gt=None, image_cpu=None, verbose=False,
+                         debug=False, image_cpu=None, verbose=False,
                          category_id=1):
         image_id = int(meta['image_id'])
-
+        self.image_ids.append(image_id)
         if self.annotations_inverse:
-            pred, instances, bboxes, scores = preprocess.annotations_inverse(annotations, meta)
+            pred, instances, bboxes, scores = self.annotations_inverse(annotations, meta)
 
         categories =  np.argmax(instances[:,:,2], axis=1)
         if len(bboxes)>0:
@@ -47,9 +47,9 @@ class EvalAerial(object):
             bboxes_res = np.array([])
             keypoint_sets_res = np.array([])
             scores_res = np.array([])
-            if self.snms:
+            if self.args.snms:
                 for cls in set(categories):
-                    pick, scores_temp = py_cpu_softnms(bboxes[range(len(bboxes)), np.argmax(bboxes[:,:, 2], axis=1)][categories==cls], scores[categories==cls], Nt=0.5, sigma=0.5, thresh=self.snms_threshold, method=1)
+                    pick, scores_temp = py_cpu_softnms(bboxes[range(len(bboxes)), np.argmax(bboxes[:,:, 2], axis=1)][categories==cls], scores[categories==cls], Nt=0.5, sigma=0.5, thresh=self.args.snms_threshold, method=1)
                     if len(bboxes_res) == 0:
                         bboxes_res = bboxes[categories==cls][pick]
                         keypoint_sets_res = instances[categories==cls][pick]
@@ -58,12 +58,12 @@ class EvalAerial(object):
                         bboxes_res = np.concatenate((bboxes_res, bboxes[categories==cls][pick]))
                         keypoint_sets_res = np.concatenate((keypoint_sets_res, instances[categories==cls][pick]))
                         scores_res = np.concatenate((scores_res, scores_temp))
-            elif self.nms:
-                _, pick = non_max_suppression_fast(np.concatenate((bboxes[range(len(bboxes)), np.argmax(bboxes[:,:, 2], axis=1)], scores[:, np.newaxis]), axis=1), categories, overlapThresh=self.snms_threshold)
+            elif self.args.nms:
+                _, pick = non_max_suppression_fast(np.concatenate((bboxes[range(len(bboxes)), np.argmax(bboxes[:,:, 2], axis=1)], scores[:, np.newaxis]), axis=1), categories, overlapThresh=self.args.nms_threshold)
                 bboxes_res = bboxes[pick]
                 keypoint_sets_res = instances[pick]
                 scores_res = scores[pick]
-            if self.nms or self.snms:
+            if self.args.nms or self.args.snms:
                 bboxes = bboxes_res
                 instances = keypoint_sets_res
                 scores = scores_res
@@ -111,11 +111,14 @@ class EvalAerial(object):
 
         fileName = meta['file_name']
         split_fileName = fileName.split("/")
-        if self.visdrone:
+        if self.args.dataset == "visdrone":
             folder = os.path.splitext(split_fileName[-1])[0]
-        else:
+        elif self.args.dataset == "uavdt":
             folder = split_fileName[-2]
             image_numb = int(split_fileName[-1][3:9])
+        else:
+            raise
+
         for ann in image_annotations:
             #x, y, w, h = self.extract_bbox(ann)
             x, y, w, h = ann['bbox']
@@ -127,9 +130,9 @@ class EvalAerial(object):
         for categ in bboxes.keys():
             for bbox in np.array(bboxes[categ]):
                 x, y, w, h, s = bbox
-                if self.visdrone:
+                if self.args.dataset == "visdrone":
                     self.dict_folder[folder].append(",".join(list(map(str,[x, y, w, h, s, categ+1, -1, -1]))))
-                else:
+                elif self.args.dataset == "uavdt":
                     self.dict_folder[folder].append(",".join(list(map(str,[image_numb, -1, x, y, w, h, s, 1, categ]))))
         if len(self.dict_folder[folder])==0:
             self.dict_folder[folder].append(",".join(list(map(str,[0, 0, 0, 0, 0, 0, -1, -1]))))
@@ -145,7 +148,7 @@ def cli():
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
     nets.cli(parser)
-    decoder.cli(parser, force_complete_pose=True)
+    decoder.cli(parser)
     encoder.cli(parser)
     data_manager.cli(parser)
     parser.add_argument('--output', default=None,
@@ -154,7 +157,7 @@ def cli():
                         help='number of batches')
     parser.add_argument('--skip-n', default=0, type=int,
                         help='skip n batches')
-    parser.add_argument('--dataset-split', choices=('val', 'test', 'test-dev', 'custom'), default='val',
+    parser.add_argument('--dataset-split', choices=('val', 'test', 'test-dev', 'test-challenge', 'custom'), default='val',
                         help='dataset to evaluate')
     parser.add_argument('--min-ann', default=0, type=int,
                         help='minimum number of truth annotations')
@@ -230,7 +233,7 @@ def write_evaluations(eval_aerial, path, args, total_time):
 
 def preprocess_factory_from_args(args):
     preprocess = None
-    collate_fn = collate_images_anns_meta
+    collate_fn = data_manager.collate_images_anns_meta
     if args.batch_size == 1:
         preprocess = transforms.Compose([
             transforms.NormalizeAnnotations(),
@@ -264,6 +267,7 @@ def main():
 
     model_cpu, _ = nets.factory_from_args(args)
     model = model_cpu.to(args.device)
+    headnames = tuple(h.shortname for h in model.head_nets)
     if not args.disable_cuda and torch.cuda.device_count() > 1:
         LOG.info('Using multiple GPUs: %d', torch.cuda.device_count())
         model = torch.nn.DataParallel(model)
@@ -271,11 +275,10 @@ def main():
         model.head_strides = model_cpu.head_strides
     processor = decoder.factory_from_args(args, model, args.device)
 
-    headnames = tuple(h.shortname for h in model.head_nets)
-    eval = EvalAerial(processor, preprocess.annotations_inverse if preprocess else None, headnames=headnames,snms=args.snms, nms=args.nms, snms_threshold=args.snms_threshold if args.snms else args.nms_threshold, visdrone=args.dataset=='visdrone')
+    eval = EvalAerial(processor, preprocess.annotations_inverse if preprocess else None, headnames=headnames,args=args)
     total_start = time.time()
     loop_start = time.time()
-    for batch_i, (image_tensors_cpu, anns_batch, meta_batch) in enumerate(data_loader):
+    for batch_i, (image_tensors_cpu, _, meta_batch) in enumerate(data_loader):
         logging.info('batch %d, last loop: %.3fs, batches per second=%.1f',
                      batch_i, time.time() - loop_start,
                      batch_i / max(1, (time.time() - total_start)))
@@ -295,15 +298,15 @@ def main():
 
         # loop over batch
         assert len(image_tensors_cpu) == len(fields_batch)
-        for image_tensor_cpu, pred, anns, meta in zip(
-                image_tensors_cpu, pred_batch, anns_batch, meta_batch):
+        for image_tensor_cpu, pred, meta in zip(
+                image_tensors_cpu, pred_batch, meta_batch):
             eval.from_predictions(pred, meta,
-                                       debug=args.debug, gt=anns,
+                                       debug=args.debug,
                                        image_cpu=image_tensor_cpu)
     total_time = time.time() - total_start
 
     # processor.instance_scorer.write_data('instance_score_data.json')$
-    write_evaluations(eval, args.output, args, total_time)
+    data_loader.dataset.write_evaluations(eval, args.output, total_time)
 
 if __name__ == '__main__':
     main()

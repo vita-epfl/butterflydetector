@@ -270,7 +270,7 @@ class ButterflyGenerator(object):
         seeds = self._pifhr_seeds()
         annotations = []
         for v, f, x, y, w, h in seeds:
-            ann = Annotationbutterfly(f, (x, y, v, w, h), self._pifhr_scales_w.shape[0], dim_per_kps=5)
+            ann = Annotation(f, (x, y, v, w, h), self._pifhr_scales_w.shape[0], dim_per_kps=5)
             ann.fill_joint_scales(self._pifhr_scales_w, self._pifhr_scales_h)
             #ann.data[:, 0:2] *= self.stride
             #ann.data[:, 3:5] *= self.stride

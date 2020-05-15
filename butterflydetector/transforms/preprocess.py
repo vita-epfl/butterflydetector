@@ -1,6 +1,6 @@
 from abc import ABCMeta, abstractmethod
 import copy
-
+import numpy as np
 
 class Preprocess(metaclass=ABCMeta):
     @abstractmethod
@@ -76,7 +76,7 @@ class Preprocess(metaclass=ABCMeta):
         bboxes = [np.array([ann.data[:, 0]-ann.data[:, 3]/2, ann.data[:, 1]-ann.data[:, 4]/2, ann.data[:, 3], ann.data[:, 4]]).transpose() for ann in annotations]
         scores = [ann.score() for ann in annotations]
         if not keypoint_sets:
-            return np.zeros((0, 17, 3)), np.zeros((0, 1,4)), np.zeros((0,))
+            return annotations, np.zeros((0, 17, 3)), np.zeros((0, 1,4)), np.zeros((0,))
         keypoint_sets = np.array(keypoint_sets)
         scores = np.array(scores)
         bboxes = np.array(bboxes)

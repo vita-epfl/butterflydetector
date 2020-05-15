@@ -129,7 +129,7 @@ class Visualizer(object):
     def butterfly_hr(self, butterflyhr):
         print('butterflyhr')
         if self.butterfly_full:
-            self.fields_indices = [[i] for i in np.arange(butterflyhr.shape[0])[np.max(intensity_fields, axis=(1,2))>0.1]]
+            self.fields_indices = [[i] for i in np.arange(butterflyhr.shape[0])[np.max(butterflyhr, axis=(1,2))>0.1]]
         for g in self.fields_indices:
             for f in g:
                 fig_file = (
@@ -151,7 +151,7 @@ class Visualizer(object):
     def butterflyhr_wh(self, butterflyhr_width, butterflyhr_height, butterflyhr, threshold=0):
         print('butterflyhr wh')
         if self.butterfly_full:
-            self.fields_indices = [[i] for i in np.arange(butterflyhr.shape[0])[np.max(intensity_fields, axis=(1,2))>0.1]]
+            self.fields_indices = [[i] for i in np.arange(butterflyhr.shape[0])[np.max(butterflyhr, axis=(1,2))>0.1]]
         for g in self.fields_indices:
             for f in g:
                 fig_file = (

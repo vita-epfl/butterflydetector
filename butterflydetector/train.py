@@ -38,7 +38,7 @@ def cli():
     losses.cli(parser)
     encoder.cli(parser)
     optimize.cli(parser)
-    data_manager.dataset_cli(parser)
+    data_manager.cli(parser)
 
     parser.add_argument('-o', '--output', default=None,
                         help='output file')

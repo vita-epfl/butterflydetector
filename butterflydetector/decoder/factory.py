@@ -58,7 +58,7 @@ def factory_from_args(args, model, device=None):
 
     # default value for keypoint filter depends on whether complete pose is forced
     if args.keypoint_threshold is None:
-        args.keypoint_threshold = 0.001 if not args.force_complete_pose else 0.0
+        args.keypoint_threshold = 0.001
 
     # decoder workers
     if args.decoder_workers is None and \
@@ -70,8 +70,6 @@ def factory_from_args(args, model, device=None):
                             experimental=args.experimental_decoder,
                             seed_threshold=args.seed_threshold,
                             extra_coupling=args.extra_coupling,
-                            multi_scale=args.multi_scale,
-                            multi_scale_hflip=args.multi_scale_hflip,
                             debug_visualizer=debug_visualizer)
 
     return Processor(model, decode,
@@ -86,8 +84,6 @@ def factory_from_args(args, model, device=None):
 def factory_decode(model, *,
                    extra_coupling=0.0,
                    experimental=False,
-                   multi_scale=False,
-                   multi_scale_hflip=True,
                    **kwargs):
     """Instantiate a decoder."""
 
@@ -100,12 +96,12 @@ def factory_decode(model, *,
     if head_names in (
         ('butterfly',), ('nsbutterfly',), ('obutterfly',),)\
         or (len(head_names) == 1 and re.match('(?:ns|o)?butterfly([0-9]+)$', head_names[0]) is not None):
-        return Butterfly(model.head_strides[-1],
-                      head_names=head_names,
-                      head_index=0,
-                      **kwargs)
         # return Butterfly(model.head_strides[-1],
         #               head_names=head_names,
+        #               head_index=0,
         #               **kwargs)
+        return Butterfly_subpixel(model.head_strides[-1],
+                      head_names=head_names,
+                      **kwargs)
 
     raise Exception('decoder unknown for head names: {}'.format(head_names))
