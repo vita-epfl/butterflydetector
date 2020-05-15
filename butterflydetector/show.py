@@ -212,7 +212,7 @@ class InstancePainter(object):
         if not np.any(v > 0):
             return
         mask = v > 0
-        bbox = np.array([ann.data[:, 0]-ann.data[:, 3]/2, ann.data[:, 1]-ann.data[:, 4]/2, ann.data[:, 3], ann.data[:, 4]])
+        bbox = np.array([ann.data[:, 0]-ann.data[:, 3]/2, ann.data[:, 1]-ann.data[:, 4]/2, ann.data[:, 3], ann.data[:, 4]]).T
         assert kps.shape[1] == 3
         x = kps[mask, 0] * self.xy_scale
         y = kps[mask, 1] * self.xy_scale
@@ -221,7 +221,7 @@ class InstancePainter(object):
         w = bbox[mask, 2] * self.xy_scale
         h = bbox[mask, 3] * self.xy_scale
         v = kps[mask, 2]
-        category = np.argmax(keypoint_sets[i,:,2], axis=0)
+        category = np.argmax(ann.data[:,2], axis=0)
         if w < 5.0:
             x1 -= 2.0
             w += 2.0
@@ -233,8 +233,6 @@ class InstancePainter(object):
 
         if text is not None:
             self._draw_text(ax, x, y, v, text, color)
-        if score is not None:
-            self._draw_text(ax, x, y, v, '{:.4f}'.format(score), color)
 
     @staticmethod
     def _draw_decoding_order(ax, decoding_order):

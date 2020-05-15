@@ -5,7 +5,7 @@
     "distutils": {
         "depends": [],
         "include_dirs": [
-            "/home/adaimi/venv/butterflyDetector/lib/python3.6/site-packages/numpy/core/include"
+            "/home/adaimi/venv/butterflyDetector_coco/lib/python3.6/site-packages/numpy/core/include"
         ],
         "name": "butterflydetector.functional",
         "sources": [

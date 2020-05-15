@@ -9,6 +9,18 @@ class Annotation(object):
         self.joint_scales_w = None
         self.joint_scales_h = None
         self.data[j] = xyv
+        self.decoding_order = []
+
+    def rescale(self, scale_factor):
+        self.data[:, 0:2] *= scale_factor
+        if self.joint_scales_w is not None:
+            self.joint_scales_w *= scale_factor
+        if self.joint_scales_h is not None:
+            self.joint_scales_h *= scale_factor
+        for _, __, c1, c2 in self.decoding_order:
+            c1[:2] *= scale_factor
+            c2[:2] *= scale_factor
+        return self
 
     def fill_joint_scales(self, scales_w, scales_h, hr_scale=1.0):
         self.joint_scales_w = np.zeros((self.data.shape[0],))

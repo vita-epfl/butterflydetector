@@ -39,3 +39,5 @@ pretrained
 test-clis-*/
 pretrained
 data
+debug
+eval_predictions

@@ -159,7 +159,6 @@ class SmoothL1Loss(object):
         self.scale = None
         return torch.sum(losses)
 
-
 class MultiHeadLoss(torch.nn.Module):
     def __init__(self, losses, lambdas):
         super(MultiHeadLoss, self).__init__()
@@ -184,7 +183,6 @@ class MultiHeadLoss(torch.nn.Module):
         total_loss = sum(loss_values) if loss_values else None
 
         return total_loss, flat_head_losses
-
 
 class MultiHeadLossAutoTune(torch.nn.Module):
     def __init__(self, losses, lambdas):
@@ -323,41 +321,19 @@ class FocalLoss(torch.nn.Module):
     def forward(self, preds, gt, bce_weight):
         pos_mask = gt.long().eq(1)
         neg_mask = gt.long().lt(1)
-        #
-        # loss = 0
-        # for i,pred in enumerate(preds):
-        #     neg_weights = torch.pow(1 - gt[i][neg_mask[i]], 4)
-        #     pos_pred = pred[pos_mask[i]==1.]
-        #     neg_pred = pred[neg_mask[i]==1.]
-        #
-        #     pos_loss = torch.log(pos_pred) * torch.pow(1 - pos_pred, 2)
-        #
-        #     neg_loss = torch.log(1 - neg_pred) * torch.pow(neg_pred, 2) * neg_weights
-        #     num_pos  = pos_mask[i].float().sum()
-        #     pos_loss = pos_loss.sum()
-        #     neg_loss = neg_loss.sum()
-        #
-        #     if pos_pred.nelement() == 0:  #no element
-        #         loss = loss - neg_loss
-        #     else:
-        #         loss = loss - (pos_loss + neg_loss) /(num_pos)
-        # if (preds.sigmoid() == 0).sum() >0 or (preds.sigmoid() == 1).sum():
-        #     import pdb; pdb.set_trace()
         res = self.m(preds)
         #res = torch.exp(res)
-        neg_weights = torch.pow(1 - gt[neg_mask], 4)
-        pos_loss = torch.log(res[pos_mask]) * torch.pow(1 - res[pos_mask], self.gamma)
-        neg_loss = torch.log(1 - res[neg_mask]) * torch.pow(res[neg_mask], self.gamma)*neg_weights
-        loss = pos_loss.sum() + neg_loss.sum() #torch.cat((pos_loss,neg_loss))
-        if torch.isnan(loss):
-             import pdb; pdb.set_trace()
-
+        #neg_weights = torch.pow(1 - gt[neg_mask], 4)
+        pos_loss = self.alpha*torch.log(res[pos_mask]) * torch.pow(1 - res[pos_mask], self.gamma)
+        neg_loss = (1-self.alpha)*torch.log(1 - res[neg_mask]) * torch.pow(res[neg_mask], self.gamma)#*neg_weights
+        #loss = pos_loss.sum() + neg_loss.sum() #torch.cat((pos_loss,neg_loss))
+        loss = torch.cat((pos_loss, pos_loss), 0)
         #self.previous = preds.clone()
-        if (gt==1).sum() != 0:
-            return -self.alpha*loss/(gt==1).sum()
-        else:
-            return -self.alpha*loss/1
-        #return -self.alpha*loss.mean()
+        # if (gt==1).sum() != 0:
+        #     return -self.alpha*loss/(gt==1).sum()
+        # else:
+        #     return -self.alpha*loss/1
+        return -loss.mean()
         #import pdb; pdb.set_trace()
         #return torch.nn.functional.nll_loss(((1 - res) ** self.gamma) * log_res, gt.long(), bce_weight)
 
@@ -372,7 +348,7 @@ class CompositeLoss(torch.nn.Module):
 
         self.focal_loss = focal_loss
         if self.focal_loss:
-            self.focal = FocalLoss(alpha=1, gamma=2, eps=1e-7)
+            self.focal = FocalLoss(alpha=0.25, gamma=2, eps=1e-7)
         self.n_vectors = n_vectors
         self.n_scales = n_scales
         self.iou_loss = iou_loss
@@ -460,6 +436,11 @@ class CompositeLoss(torch.nn.Module):
 
         LOG.debug('BCE: x = %s, target = %s, mask = %s',
                   x_intensity.shape, bce_target_intensity.shape, bce_masks.shape)
+        # bce_masks = (
+        #     bce_masks
+        #     & ((x_intensity > -4.0) | ((x_intensity < -4.0) & (target_intensity[:, :-1] == 1)))
+        #     & ((x_intensity < 4.0) | ((x_intensity > 4.0) & (target_intensity[:, :-1] == 0)))
+        # )
         bce_target = torch.masked_select(bce_target_intensity, bce_masks)
         bce_weight = None
         if self.background_weight != 1.0:
@@ -470,10 +451,11 @@ class CompositeLoss(torch.nn.Module):
             ce_loss = self.focal(torch.masked_select(bce_x_intensity, bce_masks), bce_target, bce_weight)#/batch_size
         else:
             ce_loss = torch.nn.functional.binary_cross_entropy_with_logits(
-                torch.masked_select(bce_x_intensity, bce_masks),
+                torch.masked_select(x_intensity, bce_masks),
                 bce_target,
                 weight=bce_weight,
-            )
+                reduction='sum',
+            ) / 100.0 / batch_size
         reg_losses = [None for _ in target_regs]
         reg_masks = target_intensity[:, :-1] > 0.5
         if torch.any(reg_masks):

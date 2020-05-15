@@ -13,11 +13,17 @@ import torch
 from .network import nets
 from . import data_manager, decoder, show, transforms
 from .nms import non_max_suppression_fast, py_cpu_softnms
-from .data import LABELS_VISDRONE, COLORS
+from .data import LABELS_VISDRONE, LABELS_UAVDT, COLORS, LABELS_EUROCITY, LABELS_COCO
+from .data_manager import dataset_list
 
 LOG = logging.getLogger(__name__)
 
-
+labels_list = {
+    'uavdt': LABELS_UAVDT,
+    'visdrone': LABELS_VISDRONE,
+    'coco': LABELS_COCO,
+    'eurocity': LABELS_EUROCITY
+}
 def cli():
     parser = argparse.ArgumentParser(
         prog='python3 -m butterfly.predict',
@@ -25,7 +31,7 @@ def cli():
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
     nets.cli(parser)
-    decoder.cli(parser, force_complete_pose=False, instance_threshold=0.1, seed_threshold=0.5)
+    decoder.cli(parser, instance_threshold=0.1, seed_threshold=0.5)
     parser.add_argument('images', nargs='*',
                         help='input images')
     parser.add_argument('--glob',
@@ -62,6 +68,10 @@ def cli():
                        help='only show warning messages or above')
     group.add_argument('--debug', default=False, action='store_true',
                        help='print debug messages')
+    group.add_argument('--dataset', type=str, default=None,
+                        choices=dataset_list.keys())
+    parser.add_argument('--label', default=False, action='store_true',
+                        help='show text label')
     args = parser.parse_args()
 
     log_level = logging.INFO
@@ -93,7 +103,6 @@ def cli():
 
 def main():
     args = cli()
-
     # load model
     model_cpu, _ = nets.factory_from_args(args)
     model = model_cpu.to(args.device)
@@ -123,7 +132,7 @@ def main():
     data_loader = torch.utils.data.DataLoader(
         data, batch_size=args.batch_size, shuffle=False,
         pin_memory=args.pin_memory, num_workers=args.loader_workers,
-        collate_fn=datasets.collate_images_anns_meta)
+        collate_fn=data_manager.collate_images_anns_meta)
 
     # visualizers
     skeleton_painter = show.InstancePainter(
@@ -156,12 +165,14 @@ def main():
             if preprocess is not None:
                 pred, keypoint_sets, bboxes, scores = preprocess.annotations_inverse(pred, meta)
 
+            pred = np.asarray(pred)
             categories =  np.argmax(keypoint_sets[:,:,2], axis=1)
             if len(bboxes)>0:
                 #_, pick = non_max_suppression_fast(np.concatenate((bboxes[range(len(bboxes)), np.argmax(bboxes[:,:, 2], axis=1)], scores[:, np.newaxis]), axis=1), categories, overlapThresh=0.5)
                 bboxes_res = np.array([])
                 keypoint_sets_res = np.array([])
                 scores_res = np.array([])
+                pred_res = np.array([])
 
                 if args.snms:
                     for cls in set(categories):
@@ -170,31 +181,35 @@ def main():
                             bboxes_res = bboxes[categories==cls][pick]
                             keypoint_sets_res = keypoint_sets[categories==cls][pick]
                             scores_res = scores_temp
+                            pred_res = pred[categories==cls][pick]
                         else:
                             bboxes_res = np.concatenate((bboxes_res, bboxes[categories==cls][pick]))
                             keypoint_sets_res = np.concatenate((keypoint_sets_res, keypoint_sets[categories==cls][pick]))
                             scores_res = np.concatenate((scores_res, scores_temp))
+                            pred_res = np.concatenate((pred_res, pred[categories==cls][pick]))
                 else:
                     _, pick = non_max_suppression_fast(np.concatenate((bboxes[range(len(bboxes)), np.argmax(bboxes[:,:, 2], axis=1)], scores[:, np.newaxis]), axis=1), categories, overlapThresh=args.nms_threshold)
                     bboxes_res = bboxes[pick]
                     keypoint_sets_res = keypoint_sets[pick]
                     scores_res = scores[pick]
                     categories = categories[pick]
+                    pred_res = pred[pick]
                 bboxes = bboxes_res
                 keypoint_sets = keypoint_sets_res
                 scores = scores_res
+                pred = pred_res
 
             if 'json' in args.output_types:
                 with open(output_path + '.pifpaf.json', 'w') as f:
                     json.dump([
                         {
-                            'keypoints': np.around(ann.data, 1).reshape(-1).tolist(),
-                            'bbox': np.around(bbox_from_keypoints(ann.data), 1).tolist(),
-                            'score': round(ann.score(), 3),
+                            'keypoints': np.around(kps, 1).reshape(-1).tolist(),
+                            'bbox': np.around(bbox, 1).tolist(),
+                            'score': round(score, 3),
                         }
-                        for ann in pred
+                        for kps, bbox, score in zip(keypoint_sets, bboxes, scores)
                     ], f)
-            texts = [LABELS_VISDRONE[np.argmax(kps[:,2])] for kps in keypoint_sets]
+            texts = [labels_list[args.dataset][np.argmax(kps[:,2])] for kps in keypoint_sets] if args.label else None
             colors = [COLORS[np.argmax(kps[:,2])] for kps in keypoint_sets]
             if 'bbox' in args.output_types:
                 with show.image_canvas(cpu_image,

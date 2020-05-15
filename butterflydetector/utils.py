@@ -2,6 +2,7 @@ import functools
 import math
 import numpy as np
 import os
+import copy
 
 @functools.lru_cache(maxsize=64)
 def create_sink(side):
@@ -68,3 +69,10 @@ class PIF_Category(object):
                 ann['keypoints'] = copy.deepcopy(temp)
                 ann['num_keypoints'] = 5
         return anns
+def mkdir_if_missing(directory):
+    if not os.path.exists(directory):
+        try:
+            os.makedirs(directory)
+        except OSError as e:
+            if e.errno != errno.EEXIST:
+                raise

@@ -270,7 +270,7 @@ class ButterflyGenerator(object):
         seeds = self._pifhr_seeds()
         annotations = []
         for v, f, x, y, w, h in seeds:
-            ann = Annotationbutterfly(f, (x, y, v, w, h), self._pifhr_scales_w.shape[0], dim_per_kps=5)
+            ann = Annotation(f, (x, y, v, w, h), self._pifhr_scales_w.shape[0], dim_per_kps=5)
             ann.fill_joint_scales(self._pifhr_scales_w, self._pifhr_scales_h)
             #ann.data[:, 0:2] *= self.stride
             #ann.data[:, 3:5] *= self.stride
@@ -281,32 +281,30 @@ class ButterflyGenerator(object):
     def _pifhr_seeds(self):
         start = time.perf_counter()
         seeds = []
-        try:
-            for field_i, (f, s_w, s_h, w, h) in enumerate(zip(self._pifhr, self._pifhr_scales_w, self._pifhr_scales_h, self._pifhr_width, self._pifhr_height)):
-                index_fields = index_field(f.shape)
-                candidates = np.concatenate((index_fields, np.expand_dims(f, 0), np.expand_dims(w, 0), np.expand_dims(h, 0)), 0)
 
-                mask = f > self.seed_threshold
-                candidates = np.moveaxis(candidates[:, mask], 0, -1)
+        for field_i, (f, s_w, s_h, w, h) in enumerate(zip(self._pifhr, self._pifhr_scales_w, self._pifhr_scales_h, self._pifhr_width, self._pifhr_height)):
+            index_fields = index_field(f.shape)
+            candidates = np.concatenate((index_fields, np.expand_dims(f, 0), np.expand_dims(w, 0), np.expand_dims(h, 0)), 0)
 
-                occupied = np.zeros(s_w.shape)
-                for c in sorted(candidates, key=lambda c: c[2], reverse=True):
-                    i, j = int(c[0]), int(c[1])
-                    if occupied[j, i]:
-                        continue
+            mask = f > self.seed_threshold
+            candidates = np.moveaxis(candidates[:, mask], 0, -1)
 
-                    width = max(4, s_w[j, i])
-                    height = max(4, s_h[j, i])
-                    scalar_square_add_2dsingle(occupied, c[0], c[1], width / 2.0, height/2, 1.0)
-                    #scalar_square_add_2dsingle(occupied, c[0], c[1], np.clip(c[3]/5,a_min=2, a_max=None) / 2.0, np.clip(c[4]/5,a_min=2, a_max=None)/2, 1)
-                    seeds.append((c[2], field_i, c[0] , c[1], c[3], c[4]))
+            occupied = np.zeros(s_w.shape)
+            for c in sorted(candidates, key=lambda c: c[2], reverse=True):
+                i, j = int(c[0]), int(c[1])
+                if occupied[j, i]:
+                    continue
 
-                if self.debug_visualizer:
-                    if field_i in self.debug_visualizer.pif_indices:
-                        self.log.debug('occupied seed, field %d', field_i)
-                        self.debug_visualizer.occupied(occupied)
-        except:
-            import pdb; pdb.set_trace()
+                width = max(4, s_w[j, i])
+                height = max(4, s_h[j, i])
+                scalar_square_add_2dsingle(occupied, c[0], c[1], width / 2.0, height/2, 1.0)
+                #scalar_square_add_2dsingle(occupied, c[0], c[1], np.clip(c[3]/5,a_min=2, a_max=None) / 2.0, np.clip(c[4]/5,a_min=2, a_max=None)/2, 1)
+                seeds.append((c[2], field_i, c[0] , c[1], c[3], c[4]))
+
+            if self.debug_visualizer:
+                if field_i in self.debug_visualizer.fields_indices:
+                    self.log.debug('occupied seed, field %d', field_i)
+                    self.debug_visualizer.occupied(occupied)
 
         seeds = list(sorted(seeds, reverse=True))
         if len(seeds) > 500:
