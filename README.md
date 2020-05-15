@@ -99,7 +99,7 @@ See [datasets](docs/datasets.md) for setup instructions.
 The exact training command that was used for a model is in the first
 line of the training log file.
 
-Train a ResNet model:
+Train a HRNetW32-det model on the VisDrone Dataset:
 
 ```sh
 time CUDA_VISIBLE_DEVICES=0,1 python3 -m butterflydetector.train \
@@ -108,11 +108,12 @@ time CUDA_VISIBLE_DEVICES=0,1 python3 -m butterflydetector.train \
   --epochs=150 \
   --lr-decay 120 140 \
   --batch-size=16 \
-  --basenet=resnet101 \
+  --basenet=hrnetw32det \
   --head-quad=1 \
-  --headnets butterfly \
-  --square-edge=401 \
-  --lambdas 10 1 1 15 1 1 15 1 1
+  --headnets butterfly10 \
+  --square-edge=512 \
+  --lambdas 1 1 1 1 \
+  --dataset visdrone
 ```
 
 You can refine an existing model with the `--checkpoint` option.
