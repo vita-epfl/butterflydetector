@@ -147,5 +147,12 @@ In this process, ffmpeg scales the video to `641px` which can be adjusted.
 # Citation
 
 ```
-
+@misc{adaimi2020perceiving,
+      title={Perceiving Traffic from Aerial Images}, 
+      author={George Adaimi and Sven Kreiss and Alexandre Alahi},
+      year={2020},
+      eprint={2009.07611},
+      archivePrefix={arXiv},
+      primaryClass={cs.CV}
+}
 ```
