@@ -86,9 +86,9 @@ To visualize logs:
 
 ```sh
 python3 -m butterflydetector.logs \
-  outputs/resnet50block5-pif-paf-edge401-190424-122009.pkl.log \
-  outputs/resnet101block5-pif-paf-edge401-190412-151013.pkl.log \
-  outputs/resnet152block5-pif-paf-edge401-190412-121848.pkl.log
+  outputs/<model1-basename>.pkl.log \
+  outputs/<model2-basename>.pkl.log \
+  outputs/<model3-basename>.pkl.log
 ```
 
 
@@ -119,6 +119,13 @@ time CUDA_VISIBLE_DEVICES=0,1 python3 -m butterflydetector.train \
 You can refine an existing model with the `--checkpoint` option.
 
 # Evaluation
+
+The command below will run your model on visdrone and save the predictions in the output directory. The predictions are saved in the correct format to be read by the official Matlab evaluator of VisDrone2019. To evaluate on UAVDT, simply replace 'visdrone' to 'uavdt'.
+
+
+```sh
+python -m butterflydetector.eval --checkpoint <directory-to-checkpoint> --dataset visdrone --output <directory-to-store-predictions> --seed-threshold 0.1
+```
 
 # Video
 
