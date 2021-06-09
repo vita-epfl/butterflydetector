@@ -70,7 +70,7 @@ setup(
         'torchvision>=0.3',
         'yacs',
         'matplotlib',
-        'pillow<7',  # temporary compat requirement for torchvision
+        'pillow',  # temporary compat requirement for torchvision
     ],
     extras_require={
         'onnx': [
