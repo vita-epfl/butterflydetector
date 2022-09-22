@@ -109,7 +109,6 @@ time CUDA_VISIBLE_DEVICES=0,1 python3 -m butterflydetector.train \
   --lr-decay 120 140 \
   --batch-size=16 \
   --basenet=hrnetw32det \
-  --head-quad=1 \
   --headnets butterfly10 \
   --square-edge=512 \
   --lambdas 1 1 1 1 \
