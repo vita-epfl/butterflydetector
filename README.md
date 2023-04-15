@@ -150,6 +150,10 @@ In this process, ffmpeg scales the video to `641px` which can be adjusted.
 * [evaluation logs](docs/eval_logs.md)
 * [performance analysis](docs/performance.md)-->
 
+# EPFL Roundabout Dataset
+
+EPFL Roundabout is a dataset that contains more than 2 hours of drone data collected from 4 different roundabout locations: Morges, EPFL, Ecublens, Echandens. The dataset contains both detection and tracking labels for 6 different categories: car, truck, bus, van, cyclists, pedestrians. The dataset can be used for detection, tracking, as well as trajectory prediction. The latter is usually challenging at a roundabout. The dataset can be downloaded [here](https://drive.google.com/file/d/1IYEU6hNktnqtKfoWmkbDESgG1dW6ia2s/view?usp=share_link)
+
 # Citation
 
 ```
