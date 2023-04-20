@@ -107,12 +107,13 @@ time CUDA_VISIBLE_DEVICES=0,1 python3 -m butterflydetector.train \
   --momentum=0.95 \
   --epochs=150 \
   --lr-decay 120 140 \
-  --batch-size=16 \
+  --batch-size=5 \
   --basenet=hrnetw32det \
   --headnets butterfly10 \
   --square-edge=512 \
   --lambdas 1 1 1 1 \
-  --dataset visdrone
+  --dataset visdrone \
+  --butterfly-side-length -2
 ```
 
 You can refine an existing model with the `--checkpoint` option.
@@ -158,7 +159,7 @@ EPFL Roundabout is a dataset that contains more than 2 hours of drone data colle
 
 ```
 @misc{adaimi2020perceiving,
-      title={Perceiving Traffic from Aerial Images}, 
+      title={Perceiving Traffic from Aerial Images},
       author={George Adaimi and Sven Kreiss and Alexandre Alahi},
       year={2020},
       eprint={2009.07611},
