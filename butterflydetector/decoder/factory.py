@@ -53,7 +53,7 @@ def factory_from_args(args, model, device=None):
         debug_visualizer = Visualizer(
             args.debug_fields_indices,
             file_prefix=args.debug_file_prefix,
-            show = args.show
+            #show = args.show
         )
 
     # default value for keypoint filter depends on whether complete pose is forced

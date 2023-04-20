@@ -73,6 +73,9 @@ def cli():
     group.add_argument('--profile', default=None,
                        help='enables profiling. specify path for chrome tracing file')
 
+    group.add_argument('--debug-file-prefix', default=None,
+                        help='save debug plots with this prefix')
+
     args = parser.parse_args()
 
     if args.output is None:
@@ -117,13 +120,14 @@ def main():
             transforms.RandomApply(transforms.HFlip(swap=transforms.HorizontalSwapButterfly()), 0.5),
             transforms.RescaleRelative(scale_range=(0.4 * args.rescale_images,
                                                     2.0 * args.rescale_images),
-                                       power_law=True),
+                                       power_law=False),
             transforms.Crop(args.square_edge),
             transforms.CenterPad(args.square_edge),
         ]
         if args.orientation_invariant:
             preprocess_transformations += [
-                transforms.RotateBy90(),
+                transforms.RandomApply(transforms.RotateBy90(), 0.1),
+                #transforms.RotateBy90(),
             ]
         preprocess_transformations += [
             transforms.TRAIN_TRANSFORM,
@@ -146,7 +150,7 @@ def main():
     if args.debug_fields_indices:
         encoder_visualizer = encoder.Visualizer(
             args.headnets, net_cpu.head_strides,
-            fields_indices=args.debug_fields_indices, file_prefix=args.debug_file_prefix, show_plots=args.show)
+            fields_indices=args.debug_fields_indices, file_prefix=args.debug_file_prefix)#, show_plots=args.show)
 
     if args.freeze_base:
         # freeze base net parameters

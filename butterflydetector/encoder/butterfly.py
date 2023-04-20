@@ -52,9 +52,9 @@ class ButterflyGenerator(object):
         self.s_offset = None
         if self.side_length > -1:
             self.sink = create_sink(side_length)
-            self.s_offset = ( - 1.0) / 2.0
+            self.s_offset = (self.side_length - 1.0) / 2.0
             if self.s_offset == 0:
-                self.s_offset = (- 1.0) / 2.0
+                self.s_offset = (self.side_length- 1.0) / 2.0
 
 
         self.log = logging.getLogger(self.__class__.__name__)

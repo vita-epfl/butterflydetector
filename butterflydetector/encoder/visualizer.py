@@ -18,7 +18,7 @@ class Visualizer(object):
         self.show_margin = show_margin
         self.file_prefix = file_prefix
         self.show = show_plots
-        self.keypoint_painter = show.KeypointPainter(show_box=True)
+        self.keypoint_painter = show.InstancePainter(show_box=True)
 
     def single(self, image, targets, meta):
         keypoint_sets = None
@@ -113,7 +113,7 @@ class Visualizer(object):
             with show.canvas(fig_file, show=self.show) as ax:
                 ax.imshow(image)
                 show.white_screen(ax, alpha=0.5)
-                self.keypoint_painter.keypoints_butterfly(ax, keypoint_sets[:, (f*5):f*5+5])
+                # self.keypoint_painter.output_butterfly(ax, keypoint_sets[:, (f*5):f*5+5])
                 show.quiver(ax, target[1][f], xy_scale=stride)
 
     def butterfly_repulse(self, image, target, stride, scale_wh, keypoint_sets, *, keypoints):
@@ -158,7 +158,7 @@ class Visualizer(object):
             with show.canvas() as ax:
                 ax.imshow(image)
                 show.white_screen(ax, alpha=0.5)
-                self.keypoint_painter.keypoints_butterfly(ax, keypoint_sets[:, (f*5):f*5+5])
+                self.keypoint_painter.output_butterfly(ax, keypoint_sets[:, (f*5):f*5+5])
                 show.quiver(ax, target[1][f], xy_scale=stride)
 
     def __call__(self, images, targets, meta):
