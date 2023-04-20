@@ -41,3 +41,5 @@ pretrained
 data
 debug
 eval_predictions
+*.pyc
+all-images
