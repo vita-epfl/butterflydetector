@@ -207,7 +207,7 @@ class Processor(object):
 
         # nms
 
-        annotations = self.soft_nms(annotations)
+        # annotations = self.soft_nms(annotations)
 
         # threshold
         for ann in annotations:

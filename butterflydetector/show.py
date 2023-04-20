@@ -277,7 +277,7 @@ def quiver(ax, vector_field, intensity_field=None, step=1, threshold=0.5,
         ax.add_artist(circle)
 
     return ax.quiver(x[s], y[s], u[s], v[s], c[s],
-                     angles='xy', scale_units='xy', scale=1, zOrder=10, **kwargs)
+                     angles='xy', scale_units='xy', scale=1, zorder=10, **kwargs)
 
 
 def margins(ax, vector_field, intensity_field=None, step=1, threshold=0.5,
@@ -326,7 +326,7 @@ def arrows(ax, fourd, xy_scale=1.0, threshold=0.0, **kwargs):
     c = np.min(fourd[:, 2], axis=0)
     s = np.argsort(c)
     return ax.quiver(x1[s], y1[s], (x2 - x1)[s], (y2 - y1)[s], c[s],
-                     angles='xy', scale_units='xy', scale=1, zOrder=10, **kwargs)
+                     angles='xy', scale_units='xy', scale=1, zorder=10, **kwargs)
 
 
 def boxes(ax, scalar_field, intensity_field=None, xy_scale=1.0, step=1, threshold=0.5,

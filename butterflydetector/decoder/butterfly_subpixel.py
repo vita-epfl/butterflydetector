@@ -6,7 +6,7 @@ import time
 from . import generator
 from .butterfly_hr import ButterflyHr
 from .butterfly_seeds import ButterflySeeds
-from .utils import normalize_butterfly
+from .utils import normalize_butterfly, normalize_butterfly_laplacewh
 
 LOG = logging.getLogger(__name__)
 
@@ -38,7 +38,7 @@ class Butterfly(object):
 
         self.seed_threshold = seed_threshold
         self.debug_visualizer = debug_visualizer
-
+        self.head_names = head_names
         self.pif_nn = 16
         if 'obutterfly' in head_names:
             self.pif_nn_thres = 1
@@ -50,8 +50,12 @@ class Butterfly(object):
             for stride, pif_i in zip(self.strides, self.pif_indices):
                 self.debug_visualizer.butterfly_raw(fields[pif_i], stride)
         # normalize
-        normalized_pifs = [normalize_butterfly(*fields[pif_i], fixed_scale=self.pif_fixed_scale)[0]
-                           for pif_i in self.pif_indices]
+        if 'laplacewh' in self.head_names[0]:
+            normalized_pifs = [normalize_butterfly_laplacewh(*fields[pif_i], fixed_scale=self.pif_fixed_scale)[0]
+                               for pif_i in self.pif_indices]
+        else:
+            normalized_pifs = [normalize_butterfly(*fields[pif_i], fixed_scale=self.pif_fixed_scale)[0]
+                               for pif_i in self.pif_indices]
 
         # pif hr
         pifhr = ButterflyHr(self.scale_wh, self.pif_nn)

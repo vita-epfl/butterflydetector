@@ -53,7 +53,7 @@ def factory_from_args(args, model, device=None):
         debug_visualizer = Visualizer(
             args.debug_fields_indices,
             file_prefix=args.debug_file_prefix,
-            show = args.show
+            #show = args.show
         )
 
     # default value for keypoint filter depends on whether complete pose is forced
@@ -95,7 +95,7 @@ def factory_decode(model, *,
     LOG.debug('head names = %s', head_names)
     if head_names in (
         ('butterfly',), ('nsbutterfly',), ('obutterfly',),)\
-        or (len(head_names) == 1 and re.match('(?:ns|o)?butterfly([0-9]+)$', head_names[0]) is not None):
+        or (len(head_names) == 1 and (re.match('(?:ns|o)?butterfly([0-9]+)$', head_names[0]) is not None or re.match('(?:ns|o)?butterfly_laplacewh([0-9]+)$', head_names[0]) is not None)):
         # return Butterfly(model.head_strides[-1],
         #               head_names=head_names,
         #               head_index=0,

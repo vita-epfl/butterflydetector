@@ -26,7 +26,7 @@ class Greedy(object):
         self.timers = defaultdict(float)
 
         if self.debug_visualizer:
-            self.debug_visualizer.pifhr(self.pifhr.targets)
+            self.debug_visualizer.butterfly_hr(self.pifhr.targets)
 
     def annotations(self, initial_annotations=None):
         start = time.perf_counter()

@@ -97,6 +97,26 @@ def normalize_butterfly(joint_intensity_fields, joint_fields, joint_fields_b, wi
         axis=1,
     ), joint_fields_b
 
+def normalize_butterfly_laplacewh(joint_intensity_fields, joint_fields, joint_fields_wh, joint_fields_b1, joint_fields_b2, *,
+                  fixed_scale=None):
+    joint_intensity_fields = np.expand_dims(joint_intensity_fields.copy(), 1)
+    width_fields = joint_fields_wh[:,0:1,:,:]
+    height_fields = joint_fields_wh[:,1:2,:,:]
+    # width_fields = np.expand_dims(width_fields, 1)
+    # height_fields = np.expand_dims(height_fields, 1)
+    if fixed_scale is not None:
+        width_fields[:] = width_fields
+        height_fields[:] = height_fields
+
+    index_fields = index_field(joint_fields.shape[-2:])
+    index_fields = np.expand_dims(index_fields, 0)
+    joint_fields = index_fields + joint_fields
+
+    return np.concatenate(
+        (joint_intensity_fields, joint_fields, width_fields, height_fields),
+        axis=1,
+    ), joint_fields_b1, joint_fields_b2
+
 def scalar_square_add_single(field, x, y, width, value):
     minx = max(0, int(x - width))
     miny = max(0, int(y - width))
