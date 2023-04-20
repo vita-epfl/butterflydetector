@@ -64,44 +64,83 @@ def cli(parser):
                        help='number of workers for data loading')
     group.add_argument('--batch-size', default=8, type=int,
                        help='batch size')
+    group.add_argument('--uavdt-3classes',
+                       default=False, action='store_true',
+                       help='Use 3 classes for uavdt')
 
 
 def dataset_factory(args, preprocess, target_transforms, test_mode=False, collate_fn=None):
     dataset = dataset_list[args.dataset]
     if test_mode:
-        data = dataset(
-            root=dataset.test_path[args.dataset_split],
-            annFile=None,
-            preprocess=preprocess,
-            n_images=args.n_images,
-        )
+        if args.dataset == 'uavdt':
+            data = dataset(
+                root=dataset.test_path[args.dataset_split],
+                annFile=None,
+                preprocess=preprocess,
+                n_images=args.n_images,
+                use_3classes=args.uavdt_3classes
+            )
+        else:
+            data = dataset(
+                root=dataset.test_path[args.dataset_split],
+                annFile=None,
+                preprocess=preprocess,
+                n_images=args.n_images,
+            )
         return torch.utils.data.DataLoader(
             data, batch_size=args.batch_size, pin_memory=args.pin_memory,
             num_workers=args.loader_workers, collate_fn=collate_fn)
+    if args.dataset == 'uavdt':
+        train_data = dataset(
+            root=args.train_image_dir or dataset.train_image_dir,
+            annFile=args.train_annotations or dataset.train_annotations,
+            preprocess=preprocess,
+            target_transforms=target_transforms,
+            n_images=args.n_images,
+            use_3classes=args.uavdt_3classes
+        )
 
-    train_data = dataset(
-        root=args.train_image_dir or dataset.train_image_dir,
-        annFile=args.train_annotations or dataset.train_annotations,
-        preprocess=preprocess,
-        target_transforms=target_transforms,
-        n_images=args.n_images,
-    )
+        val_data = dataset(
+            root=args.val_image_dir or dataset.val_image_dir,
+            annFile=args.val_annotations or dataset.val_annotations,
+            preprocess=preprocess,
+            target_transforms=target_transforms,
+            n_images=args.n_images,
+            use_3classes=args.uavdt_3classes
+        )
 
-    val_data = dataset(
-        root=args.val_image_dir or dataset.val_image_dir,
-        annFile=args.val_annotations or dataset.val_annotations,
-        preprocess=preprocess,
-        target_transforms=target_transforms,
-        n_images=args.n_images,
-    )
+        pre_train_data = dataset(
+            root=args.train_image_dir or dataset.train_image_dir,
+            annFile=args.train_annotations or dataset.train_annotations,
+            preprocess=preprocess,
+            target_transforms=target_transforms,
+            n_images=args.pre_n_images,
+            use_3classes=args.uavdt_3classes
+        )
+    else:
+        train_data = dataset(
+            root=args.train_image_dir or dataset.train_image_dir,
+            annFile=args.train_annotations or dataset.train_annotations,
+            preprocess=preprocess,
+            target_transforms=target_transforms,
+            n_images=args.n_images
+        )
 
-    pre_train_data = dataset(
-        root=args.train_image_dir or dataset.train_image_dir,
-        annFile=args.train_annotations or dataset.train_annotations,
-        preprocess=preprocess,
-        target_transforms=target_transforms,
-        n_images=args.pre_n_images,
-    )
+        val_data = dataset(
+            root=args.val_image_dir or dataset.val_image_dir,
+            annFile=args.val_annotations or dataset.val_annotations,
+            preprocess=preprocess,
+            target_transforms=target_transforms,
+            n_images=args.n_images
+        )
+
+        pre_train_data = dataset(
+            root=args.train_image_dir or dataset.train_image_dir,
+            annFile=args.train_annotations or dataset.train_annotations,
+            preprocess=preprocess,
+            target_transforms=target_transforms,
+            n_images=args.pre_n_images
+        )
 
     if args.duplicate_data:
         train_data = torch.utils.data.ConcatDataset(

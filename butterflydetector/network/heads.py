@@ -215,6 +215,8 @@ def determine_nfields(head_name):
     m = re.match('(?:ns|o)?butterfly([0-9]+)$', head_name)
     if m is None:
         m = re.match('(?:ns|o)?repulse([0-9]+)$', head_name)
+    if m is None:
+        m = re.match('(?:ns|o)?butterfly_laplacewh([0-9]+)$', head_name)
     if m is not None:
         return int(m.group(1))
 
@@ -222,19 +224,26 @@ def determine_nfields(head_name):
 
 
 def determine_nvectors(head_name):
+    if ('butterfly_laplacewh' in head_name):
+        return 2
     if ('butterfly' in head_name or 'repulse' in head_name):
         return 1
+
     return 0
 
 
 def determine_nscales(head_name):
+    if ('butterfly_laplacewh' in head_name):
+        return 0
     if ('butterfly' in head_name or 'repulse' in head_name):
         return 2
+
     return 0
 
 def factory(name, n_features):
     if re.match('(?:ns|o)?butterfly([0-9]+)$', name) or \
-       re.match('(?:ns|o)?repulse([0-9]+)$', name):
+       re.match('(?:ns|o)?repulse([0-9]+)$', name) or \
+       re.match('(?:ns|o)?butterfly_laplacewh([0-9]+)$', name):
 
         n_fields = determine_nfields(name)
         n_vectors = determine_nvectors(name)

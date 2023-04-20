@@ -109,7 +109,6 @@ time CUDA_VISIBLE_DEVICES=0,1 python3 -m butterflydetector.train \
   --lr-decay 120 140 \
   --batch-size=16 \
   --basenet=hrnetw32det \
-  --head-quad=1 \
   --headnets butterfly10 \
   --square-edge=512 \
   --lambdas 1 1 1 1 \
@@ -150,6 +149,10 @@ In this process, ffmpeg scales the video to `641px` which can be adjusted.
 * [studies.ipynb](docs/studies.ipynb)
 * [evaluation logs](docs/eval_logs.md)
 * [performance analysis](docs/performance.md)-->
+
+# EPFL Roundabout Dataset
+
+EPFL Roundabout is a dataset that contains more than 2 hours of drone data collected from 4 different roundabout locations: Morges, EPFL, Ecublens, Echandens. The dataset contains both detection and tracking labels for 6 different categories: car, truck, bus, van, cyclists, pedestrians. The dataset can be used for detection, tracking, as well as trajectory prediction. The latter is usually challenging at a roundabout. The dataset can be downloaded [here](https://drive.google.com/file/d/1IYEU6hNktnqtKfoWmkbDESgG1dW6ia2s/view?usp=share_link)
 
 # Citation
 

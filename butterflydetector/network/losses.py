@@ -221,11 +221,9 @@ class MultiHeadLossAutoTune(torch.nn.Module):
                             for ll in l(f, t)]
 
         assert len(self.log_sigmas) == len(flat_head_losses)
-
         loss_values = [lam * l / (2.0 * (log_sigma.exp() ** 2))
                        for lam, log_sigma, l in zip(self.lambdas, self.log_sigmas, flat_head_losses)
                        if l is not None]
-
         auto_reg = [lam * log_sigma
                     for lam, log_sigma, l in zip(self.lambdas, self.log_sigmas, flat_head_losses)
                     if l is not None]
@@ -335,7 +333,7 @@ class FocalLoss(torch.nn.Module):
         #     return -self.alpha*loss/(gt==1).sum()
         # else:
         #     return -self.alpha*loss/1
-        return - loss.sum()/max((gt==1).sum(),1.0)
+        return -loss.sum()/max((gt==1).sum(), 1)
         # return -loss.mean()
         #import pdb; pdb.set_trace()
         #return torch.nn.functional.nll_loss(((1 - res) ** self.gamma) * log_res, gt.long(), bce_weight)
@@ -355,7 +353,7 @@ class CompositeLoss(torch.nn.Module):
         self.n_vectors = n_vectors
         self.n_scales = n_scales
         self.iou_loss = iou_loss
-        if not ('butterfly' in head_name or 'repulse' in head_name):
+        if not ('butterfly' in head_name or 'repulse' in head_name) or self.n_scales==0:
             self.scales_butterfly = None
         if self.n_scales and not ('butterfly' in head_name or 'repulse' in head_name):
             assert len(sigmas) == n_scales
@@ -410,7 +408,6 @@ class CompositeLoss(torch.nn.Module):
         LOG.debug('loss for %s', self.field_names)
 
         x, t = args
-
         assert len(x) == 1 + 2 * self.n_vectors + self.n_scales
         x_intensity = x[0]
         x_regs = x[1:1 + self.n_vectors]
@@ -621,6 +618,12 @@ def factory_from_args(args):
 
 
 def loss_parameters(head_name):
+    if 'laplacewh' in head_name:
+        return {
+            'n_vectors': 2,
+            'n_scales': 0,
+        }
+
     n_vectors = 1
 
     n_scales = 2

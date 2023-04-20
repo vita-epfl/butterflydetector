@@ -2,6 +2,7 @@ import logging
 import re
 
 from .butterfly import Butterfly
+from .butterfly_laplacewh import ButterflyLaplaceWH
 from .skeleton import Skeleton
 
 LOG = logging.getLogger(__name__)
@@ -16,6 +17,7 @@ def cli(parser):
 def factory(args, strides):
     # configure Butterfly
     Butterfly.side_length = args.butterfly_side_length
+    ButterflyLaplaceWH.side_length = args.butterfly_side_length
     return factory_heads(args.headnets, strides)
 
 
@@ -59,5 +61,22 @@ def factory_head(head_name, stride):
         if 'obutterfly' in head_name:
             obutterfly = True
         return Butterfly(stride, scale_wh, n_keypoints=n_keypoints, obutterfly=obutterfly)
+
+    if head_name in (
+        'butterfly_laplacewh', 'nsbutterfly_laplacewh',
+    ) or re.match('(?:ns|o)?butterfly_laplacewh([0-9]+)$', head_name) is not None:
+        m = re.match('(?:ns|o)?butterfly_laplacewh([0-9]+)$', head_name)
+        if m is not None:
+            n_keypoints = int(m.group(1))
+            LOG.debug('using %d keypoints for pif', n_keypoints)
+        else:
+            n_keypoints = 17
+        scale_wh = 1
+        obutterfly = False
+        if 'nsbutterfly_laplacewh' in head_name:
+            scale_wh = stride
+        if 'obutterfly_laplacewh' in head_name:
+            obutterfly = True
+        return ButterflyLaplaceWH(stride, scale_wh, n_keypoints=n_keypoints, obutterfly=obutterfly)
 
     raise Exception('unknown head to create an encoder: {}'.format(head_name))

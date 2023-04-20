@@ -30,7 +30,7 @@ class UAVDT(torch.utils.data.Dataset):
     train_annotations = "data/UAV-benchmark-M/GT/"
     val_annotations = "data/UAV-benchmark-M/GT/"
     test_path = {'val': "data/UAV-benchmark-M/test/"}
-    def __init__(self, root, annFile, *, target_transforms=None, n_images=None, preprocess=None):
+    def __init__(self, root, annFile, *, target_transforms=None, n_images=None, preprocess=None, use_3classes=False):
         self.root = root
         self.annFile = annFile
         folders = os.listdir(self.root)
@@ -77,6 +77,7 @@ class UAVDT(torch.utils.data.Dataset):
 
         ids = set(ids)
 
+        self.use_3classes = use_3classes
 
 
         print('Images: {}'.format(len(self.imgs)))
@@ -116,6 +117,13 @@ class UAVDT(torch.utils.data.Dataset):
                 h = target[4]
                 x = target[1]
                 y = target[2]
+                if self.use_3classes:
+                    category_id = int(target[0])
+                    keypoints = [0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00]*(category_id-1)\
+                     + [x, y, 2, x+w, y, 2, x+w, y+h, 2, x, y+h, 2, x+w/2, y+h/2, 2]\
+                     + [0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00]*(3-(category_id))
+                else:
+                    keypoints = [x, y, 2, x+w, y, 2, x+w, y+h, 2, x, y+h, 2, x+w/2, y+h/2, 2]
                 anns.append({
                     'image_id': index,
                     'category_id': int(target[0]),
@@ -123,24 +131,25 @@ class UAVDT(torch.utils.data.Dataset):
                     "area": w*h,
                     "iscrowd": 0,
                     "segmentation":[],
-                    'keypoints': [x, y, 2, x+w, y, 2, x+w, y+h, 2, x, y+h, 2, x+w/2, y+h/2, 2],
+                    'keypoints': keypoints,
                     'num_keypoints': 5,
                 })
-            for target in self.targets_ignore[index]:
-                w = target[3]
-                h = target[4]
-                x = target[1]
-                y = target[2]
-                anns.append({
-                    'image_id': index,
-                    'category_id': int(target[0]),
-                    'bbox': [x, y, w, h],
-                    "area": w*h,
-                    "iscrowd": 1,
-                    "segmentation":[],
-                    'keypoints': [x, y, 2, x+w, y, 2, x+w, y+h, 2, x, y+h, 2, x+w/2, y+h/2, 2],
-                    'num_keypoints': 5,
-                })
+            if not self.use_3classes:
+                for target in self.targets_ignore[index]:
+                    w = target[3]
+                    h = target[4]
+                    x = target[1]
+                    y = target[2]
+                    anns.append({
+                        'image_id': index,
+                        'category_id': int(target[0]),
+                        'bbox': [x, y, w, h],
+                        "area": w*h,
+                        "iscrowd": 1,
+                        "segmentation":[],
+                        'keypoints': [x, y, 2, x+w, y, 2, x+w, y+h, 2, x, y+h, 2, x+w/2, y+h/2, 2],
+                        'num_keypoints': 5,
+                    })
 
         # preprocess image and annotations
         image, anns, meta = self.preprocess(image, anns, None)
